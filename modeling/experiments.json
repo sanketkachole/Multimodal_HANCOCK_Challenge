@@ -1,0 +1,9 @@
+{
+  "tabular"                : ["tabular"],
+  "text"                   : ["text"],
+  "wsi"                    : ["wsi"],
+  "tma"                    : ["tma"],
+  "tabular+text"           : ["tabular", "text"],
+  "tabular+text+wsi"       : ["tabular", "text", "wsi"],
+  "tabular+text+wsi+tma"   : ["tabular", "text", "wsi", "tma"]
+}

@@ -1,0 +1,49 @@
+# IDE / env
+.idea/
+# Virtual envs
+venv312/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data & experiments (avoid uploading)
+data/
+datasets/
+modalities_in_numpy_version/
+runs/
+wandb/
+outputs/
+checkpoints/
+
+fused_modalities_in_numpy/*
+!fused_modalities_in_numpy/**/*.py
+!fused_modalities_in_numpy/*.py
+
+# Large artifact types
+*.npy
+*.npz
+*.pt
+*.pth
+*.pkl
+*.ckpt
+*.h5
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.svs
+*.tif
+*.tiff
+*.csv
+*.xlsx
+
+
+# plots/images
+modeling/plots/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
