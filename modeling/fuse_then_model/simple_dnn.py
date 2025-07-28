@@ -9,8 +9,8 @@ Edit the CONFIG block, highlight what you need, and run in PyCharm
 """
 
 # ─────────────── CONFIG ──────────────────────────────────────────
-DATA_DIR = r"/modalities_in_numpy_version/"  # folder with *.npy
-SELECTED_MODALITIES = ["tabular", "text"]        # pick any subset ["tabular", "text", "wsi" , "tma"  ]
+DATA_DIR = r"D:/sanket_experiments_clean/modalities_in_numpy_version/"  # folder with *.npy
+SELECTED_MODALITIES = [ "tabular", "text", "wsi" ]        # pick any subset ["tabular", "text", "wsi" , "tma"  ]
 DROP_ROWS_MISSING_ALL = False                    # drop patients missing any selected modality?
 SEED   = 0
 FOLDS  = 5
