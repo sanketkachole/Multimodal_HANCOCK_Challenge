@@ -1,73 +1,88 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-load_wsi_mean.py
-────────────────
-Convert *patient_wsi_vectors_mean.csv* → two NumPy arrays:
+###################################################
+######### convert organiser's features from .csv to .npy #####################
+###################################################
+prim_csv = pd.read_csv("D:/sanket_experiments_clean/organiser_wsi_prim_patch_level_mean.csv").set_index('patient_id') # 1024 dimentions
+lymp_csv = pd.read_csv("D:/sanket_experiments_clean/organiser_wsi_lymph_patch_level_mean.csv").set_index('patient_id')
 
-    • wsi_features_mean.npy   (N × 2048  float32)
-    • wsi_masks_mean.npy      (N ×   2   uint8)   → [HAS_PRIM_WSI, HAS_LN_WSI]
+all_pid = sorted(set(prim_csv.index) | set(lymp_csv.index))
 
-CSV must have columns
-    patient_id, HAS_PRIM_WSI, HAS_LN_WSI,
-    P_000 … P_1023, L_000 … L_1023
-"""
+X = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from prim
+Y = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from lymph
+M = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for prim
+N = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for lymph
 
-import argparse, numpy as np, pandas as pd
-from pathlib import Path
 
-EMB_DIM = 1024                                   # ← 1024 per slide type
-COL_P   = [f'P_{i:03d}' for i in range(EMB_DIM)]
-COL_L   = [f'L_{i:03d}' for i in range(EMB_DIM)]
+for i, pid in enumerate(all_pid):
+    if pid in prim_csv.index:
+        X[i] = prim_csv.loc[pid, [f'P_{j:03d}' for j in range(1024)]]
+        M[i] = int(prim_csv.loc[pid, 'HAS_PRIM_WSI'])
+    if pid in lymp_csv.index:
+        Y[i] = lymp_csv.loc[pid , [f'L_{j:03d}' for j in range(1024)]]
+        N[i] = int(lymp_csv.loc[pid, 'HAS_LN_WSI'])
 
-def main(wsi_csv, pid_pkl, out_feat, out_mask):
-    # ---- patient index -----------------------------------------------------
-    pid_df = pd.read_pickle(pid_pkl)              # index = patient_id
-    n_pat  = len(pid_df)
 
-    # row lookup: prefer an explicit "row" column; fall back to enumeration
-    if 'row' in pid_df.columns:
-        row_of = pid_df['row'].to_dict()
-    else:
-        row_of = {pid: i for i, pid in enumerate(pid_df.index)}
+np.save('organiser_wsi_primary_mean_features.npy',X)
+np.save('organiser_wsi_primary_mask.npy', M)
+np.save('organiser_wsi_lymph_mean_features.npy', Y)
+np.save('organiser_wsi_lymph_maks.npy', N)
 
-    # ---- read CSV ----------------------------------------------------------
-    wsi_df = pd.read_csv(wsi_csv).set_index('patient_id')
 
-    # ---- allocate ----------------------------------------------------------
-    X = np.zeros((n_pat, EMB_DIM * 2), dtype=np.float32)
-    M = np.zeros((n_pat, 2),             dtype=np.uint8)   # [prim, ln]
+###################################################
+######### convert uni2's features from .csv to .npy #####################
+###################################################
+prim_csv = pd.read_csv("D:/sanket_experiments_clean/shubham_uni_wsi_prim_patch_level_mean.csv").set_index('patient_id') # 1024 dimentions
+lymp_csv = pd.read_csv("D:/sanket_experiments_clean/shubham_uni_wsi_lymph_patch_level_mean.csv").set_index('patient_id')
 
-    # ---- fill --------------------------------------------------------------
-    for pid, row in wsi_df.iterrows():
-        if pid not in row_of:                       # safety check
-            continue
-        idx = row_of[pid]
+all_pid = sorted(set(prim_csv.index) | set(lymp_csv.index))
 
-        X[idx, :EMB_DIM]  = row[COL_P].to_numpy(dtype='float32')
-        X[idx, EMB_DIM:]  = row[COL_L].to_numpy(dtype='float32')
+X = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from prim
+Y = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from lymph
+M = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for prim
+N = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for lymph
 
-        M[idx, 0]         = int(row['HAS_PRIM_WSI'])
-        M[idx, 1]         = int(row['HAS_LN_WSI'])
 
-    # ---- save --------------------------------------------------------------
-    np.save(out_feat, X)
-    np.save(out_mask, M)
-    print(f"✅  Saved {out_feat}   shape={X.shape}")
-    print(f"✅  Saved {out_mask}   shape={M.shape}")
+for i, pid in enumerate(all_pid):
+    if pid in prim_csv.index:
+        X[i] = prim_csv.loc[pid, [f'P_{j:03d}' for j in range(1024)]]
+        M[i] = int(prim_csv.loc[pid, 'HAS_PRIM_WSI'])
+    if pid in lymp_csv.index:
+        Y[i] = lymp_csv.loc[pid , [f'L_{j:03d}' for j in range(1024)]]
+        N[i] = int(lymp_csv.loc[pid, 'HAS_LN_WSI'])
 
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--wsi_csv',  required=True,
-                    help='patient_wsi_vectors_mean.csv')
-    ap.add_argument('--pid_pkl',  required=True,
-                    help='pid_index.pkl')
-    ap.add_argument('--out_feat', default='wsi_features_mean.npy',
-                    help='Destination N×2048 float32 array')
-    ap.add_argument('--out_mask', default='wsi_masks_mean.npy',
-                    help='Destination N×2 uint8 presence flags')
-    args = ap.parse_args()
-    main(**vars(args))
+
+np.save('shubham_uni_wsi_prim_patch_level_mean_features.npy',X)
+np.save('shubham_uni_wsi_prim_patch_level_mask.npy', M)
+np.save('shubham_uni_wsi_lymph_patch_level_mean_features.npy', Y)
+np.save('shubham_uni_wsi_lymph_patch_level_maks.npy', N)
+
+
+###################################################
+######### convert virchow's features from .csv to .npy #####################
+###################################################
+prim_csv = pd.read_csv("D:/sanket_experiments_clean/shubham_virchow2_wsi_prim_patch_level_mean.csv").set_index('patient_id') # 1024 dimentions
+lymp_csv = pd.read_csv("D:/sanket_experiments_clean/shubham_virchow2_wsi_lymph_patch_level_mean.csv").set_index('patient_id')
+
+all_pid = sorted(set(prim_csv.index) | set(lymp_csv.index))
+
+X = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from prim
+Y = np.zeros((len(all_pid), 1024), np.float32)  # dummy vector to store features from lymph
+M = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for prim
+N = np.zeros((len(all_pid), ), np.uint8)   # dummy vector to store Mask for lymph
+
+
+for i, pid in enumerate(all_pid):
+    if pid in prim_csv.index:
+        X[i] = prim_csv.loc[pid, [f'P_{j:03d}' for j in range(1024)]]
+        M[i] = int(prim_csv.loc[pid, 'HAS_PRIM_WSI'])
+    if pid in lymp_csv.index:
+        Y[i] = lymp_csv.loc[pid , [f'L_{j:03d}' for j in range(1024)]]
+        N[i] = int(lymp_csv.loc[pid, 'HAS_LN_WSI'])
+
+
+np.save('shubham_virchow2_wsi_prim_patch_level_mean_features.npy',X)
+np.save('shubham_virchow2_wsi_prim_patch_level_mask.npy', M)
+np.save('shubham_virchow2_wsi_lymph_patch_level_mean_features.npy', Y)
+np.save('shubham_virchow2_wsi_lymph_patch_level_maks.npy', N)
 
 
 
